@@ -1,5 +1,9 @@
 # Online assembler
 
+Requires web browser with WASM support. Tested on latest Firefox, Google Chrome, and Safari (both Desktop and Mobile).
+
+[Live Demo](https://asm.x32.dev)
+
 ## Build instruction
 
 * Install and configure [Emscripten SDK](https://emscripten.org/index.html) (EMSDK)
