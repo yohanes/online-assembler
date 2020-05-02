@@ -2,6 +2,14 @@
 <html lang="en-us">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:title" content="Real-time assembler in your browser" />
+  <meta property="og:image" content="/image.png" />
+  <meta property="og:description" content="Online assembler based on Keystone, compiled with WASM." />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">  
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Online assembler</title>
   <script src="preact.umd.js"></script>
@@ -11,8 +19,9 @@
     width: 100%;
   }
   body {
+    padding: 20px;
     font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
-    font-size: 14px;
+    font-size: 120%;
   }
   h1 {
     padding-bottom: .3em;
@@ -25,7 +34,7 @@
   <p>This is a real-time Assembler, type your assembly code, and get your machine code as you type.</p>
   <p>Everything is done in the browser, so your code never leaves your browser. This App requires a modern browser with
     support for WASM (tested on latest Google Chrome and Firefox).</p>
-  <div id='container'></div>
+  <div id='container'><h2>Please wait, loading WASM file ...</h2></div>
   <script>
     const { createElement, render, Component } = preact;
     const h = createElement;
@@ -34,7 +43,9 @@
 
     function start() {
       assemble_c = Module.cwrap('assemble', 'string', ['string', 'string', 'number']);
-      render(h(App), document.getElementById('container'));
+      var container = document.getElementById('container');
+      container.innerHTML = "";
+      render(h(App), container);
     }
     var Module = {
       preRun: [],

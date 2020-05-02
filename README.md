@@ -15,6 +15,10 @@ To compile keystone (I am using `/wasm` for the prefix, you can use any path, ad
      emcmake cmake -DCMAKE_INSTALL_PREFIX:PATH=/wasm ..
      make && make install
 
+To optimize the size, use [binaryen](https://github.com/WebAssembly/binaryen)
+
+    wasm-opt -Oz index.wasm  -o index2.wasm
+    mv index2.wasm index.wasm
 
 ## License
 
