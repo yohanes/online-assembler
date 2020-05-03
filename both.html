@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:title" content="Real-time assembler in your browser" />
+  <meta property="og:image" content="/image.png" />
+  <meta property="og:description" content="Online assembler based on Keystone, compiled with WASM." />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">  
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Online assembler</title>
+  <script src="preact.umd.js"></script>
+  <script>
+    const { createElement, render, Component } = preact;
+    const h = createElement;
+  </script>
+  <script src="asm.js"></script>
+  <script src="disasm.js"></script>
+  <style>
+  textarea {
+    box-sizing: border-box;
+    width: 100%;
+  }
+  body {
+    padding: 20px;
+    font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji;
+    font-size: 120%;
+  }
+  h1 {
+    padding-bottom: .3em;
+    border-bottom: 1px solid #eaecef;
+  }
+  </style>
+</head>
+<body>
+  <h1>Real-time assembler/disassembler in your browser</h1>
+  <p>Assembler: type your assembly code, and get your machine code as you type.</p>
+  <p>Disassembler: paste your machine code (as hex literal, byte array or base64 encoded), and get your disassembly instantly.</p>  
+  <p>Everything is done in the browser, so your code never leaves your browser. This App requires a modern browser with
+    support for WASM (tested on latest Google Chrome and Firefox).</p>  
+  <div id='container'><h2>Please wait, loading WASM file ...</h2></div>
+  <script>
+
+    var assemble_c = null;
+    var disassemble_c = null;
+
+    class MainApp extends Component {
+
+      constructor() {
+        super();
+        this.state = {
+          mode : "assembler"
+        }
+      }
+
+      handleChange(e) {
+        this.setState({ mode: e.target.value })
+      }
+
+      render(props, state) {
+        var app = null;
+          if (state.mode=="assembler") {
+            app = h(AssemblerApp);
+          } else {
+            app = h(DisassemblerApp);
+          }          
+          var radios = [];
+          var app_selections = {
+                      "assembler": "Assembler",
+                      "disassembler": "Disassembler"
+                    }
+          for (const [key, value] of Object.entries(app_selections)) {
+
+            var radioopt = {
+                type: 'radio',
+                name: 'appsel',
+                value: key,
+                onchange: this.handleChange.bind(this)
+            }
+            
+
+            if (key == state.mode) {
+                radioopt['checked'] = true;
+            }
+
+            var radio = h('input', radioopt);
+
+            var label = h('label', { 'for': key }, value)
+            radios.push(radio)
+            radios.push(label)
+        }
+          return h('div', null, h('b',null, "Select tool:"), radios, app);
+      }
+    }
+
+    function start() {
+      assemble_c = Module.cwrap('assemble', 'string', ['string', 'string', 'number']);
+      disassemble_c = Module.cwrap('disassemble', 'string', ['string', 'string', 'number']);
+      var container = document.getElementById('container');
+      container.innerHTML = "";
+      render(h(MainApp), container);
+    }
+    var Module = {
+      preRun: [],
+      postRun: [start],
+      print:
+        function (text) {
+          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+          console.log(text);
+        },
+      printErr: function (text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.error(text);
+      },
+      canvas: function () { },//not using canvas
+      setStatus: function (text) {
+        console.log("STATUS:" + text);
+      },
+      monitorRunDependencies: function (left) {
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+      }
+    };
+    window.onerror = function (event) {
+       Module.setStatus('Exception thrown, see JavaScript console');
+    };
+
+
+  </script>
+  <script async type="text/javascript" src="casmdisasm.js"></script>
+  Copyright &copy; 2020 Yohanes Nugroho. Code is based on <a href="http://www.keystone-engine.org/">Keystone Engine</a> and <a href="http://www.capstone-engine.org/">capstone engine</a>. Source code available on <a href="https://github.com/yohanes/online-assembler">Github</a>.
+</body>
+</html>

@@ -19,9 +19,38 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <limits.h>
+#include <string>
 #include <unistd.h>
 #include <keystone/keystone.h>
+#include <string>
 
+static std::string tohexstring(uint8_t *bytes, int size){
+		char buf[4];
+		std::string result;
+		for (int i = 0; i < size; i++)
+		{
+			if (i>0)
+				result += " ";
+			snprintf(buf, sizeof(buf), "%02x", bytes[i]);
+			result += buf;
+		}
+		return result;
+}
+static int hex2dec(char hex)
+{
+	if (hex>='0' && hex<='9')
+		return hex-'0';
+	
+	if (hex >= 'A' && hex <= 'F') 
+		return 10 + (hex-'A');
+
+	if (hex >= 'a' && hex <= 'f') 
+		return 10 + (hex-'a');
+
+	return -1;
+}
+
+extern "C" {
 /* returns hex encoded string, in case of error, will return ERROR: <message>*/
 const char *assemble(const char *mode, const char *assembly, uint64_t start_addr)
 {
@@ -225,3 +254,24 @@ const char *assemble(const char *mode, const char *assembly, uint64_t start_addr
 	ks_close(ks);
 	return result;
 }
+}
+
+static const unsigned char *decode_hex(const char *x)
+{
+	int len = strlen(x);
+	unsigned char *result = (unsigned char*)calloc(1, (len/2)+1);
+	int j = 0;
+	for (int i =0; i < len; i+=2){
+		int c1 = hex2dec(x[i]);
+		int c2 = hex2dec(x[i+1]);
+		if (c1==-1 || c2==-1) {
+			free(result);
+			return 0;
+		}
+
+		unsigned char c = ( c1 << 4 )|c2;
+		result[j++] = c;
+	}
+	return result;
+}
+
