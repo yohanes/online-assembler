@@ -99,6 +99,11 @@ const char *disassemble(const char *_arch_mode, const char *codehex, uint64_t st
 		mode = CS_MODE_ARM;
 	}
 
+	if (arch_mode=="armbe") {
+		arch = CS_ARCH_ARM;
+		mode = (cs_mode)(CS_MODE_ARM|CS_MODE_BIG_ENDIAN);
+	}
+
 	if (arch_mode=="arm64") {
 		arch = CS_ARCH_ARM64;
 		mode = CS_MODE_ARM;

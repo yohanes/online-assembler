@@ -87,6 +87,7 @@ function toHex(c) {
     'x86_32': 'x86 32bit',
     'x86_64': 'x86 64bit',
     "arm": "ARM - little endian",
+    "armbe": "ARM - big endian",
     "thumb": "THUMB - little endian",
     "thumbbe": "THUMB - big endian",
     "arm64": "ARM64",
