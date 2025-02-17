@@ -1,4 +1,3 @@
-
 const selections = {
     'x16':  'x86 16bit',
     'x32':  'x86 32bit',
@@ -58,18 +57,24 @@ class InputAssembly extends Component {
         super(props);
         this.state = {
             mode: props.mode,
-            text: props.initialtext
+            text: props.initialtext,
+            baseAddress: "0x0"
         }
     }
 
     handleArchChange(mode) {
         this.state.mode = mode;
-        this.props.onchange(this.state.mode, this.state.text)
+        this.props.onchange(this.state.mode, this.state.text, this.state.baseAddress)
     }
 
     handleTextChange(e) {
         this.state.text = e.target.value;
-        this.props.onchange(this.state.mode, e.target.value)
+        this.props.onchange(this.state.mode, e.target.value, this.state.baseAddress)
+    }
+
+    handleBaseAddressChange(e) {
+        this.state.baseAddress = e.target.value;
+        this.props.onchange(this.state.mode, this.state.text, e.target.value)
     }
 
     render(props, state) {
@@ -78,6 +83,14 @@ class InputAssembly extends Component {
                 "mode": this.state.mode,
                 "onchange": this.handleArchChange.bind(this)
             }),
+            h('div', null,
+                h('label', null, "Base Address: "),
+                h('input', {
+                    "type": "text",
+                    "value": this.state.baseAddress,
+                    "oninput": this.handleBaseAddressChange.bind(this)
+                })
+            ),
             h('textarea', {
                 "rows": 10,
                 "cols": 60,
@@ -168,19 +181,21 @@ class AssemblerApp extends Component {
         this.state = {
             mode: Object.entries(selections)[0][0],
             text: "nop",
-            outmode: Object.entries(output_options)[0][0]
+            outmode: Object.entries(output_options)[0][0],
+            baseAddress: "0x0"
         }
-        this.state.output = this.computeOutput(this.state.mode, this.state.text, this.state.outmode);
+        this.state.output = this.computeOutput(this.state.mode, this.state.text, this.state.outmode, this.state.baseAddress);
     }
 
-    computeOutput(mode, text, outmode) {
+    computeOutput(mode, text, outmode, baseAddress) {
+        const base = parseInt(baseAddress) || 0;
 
         if (outmode == "hex") {
-            return assemble_c(mode, text, 0x0);
+            return assemble_c(mode, text, base);
         }
 
         if (text.indexOf(":")>0) { //has labels, can't parse per line
-            var assembled = assemble_c(mode, text, 0x0);
+            var assembled = assemble_c(mode, text, base);
             if (assembled.startsWith("ERROR")) {
                 return assembled;
             }
@@ -223,11 +238,14 @@ class AssemblerApp extends Component {
         if (outmode == "pythonarr")
             comment = " # ";
 
+        let currentBase = base;
+
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
             if (line == "")
                 continue;
-            var tmp = assemble_c(mode, line, 0x0);
+            console.log("Assembling base: " + currentBase);
+            var tmp = assemble_c(mode, line, currentBase);
             if (tmp == "")
                 continue;
             if (tmp.startsWith("ERROR")) {
@@ -235,6 +253,7 @@ class AssemblerApp extends Component {
                 res += tmp + "\n"
                 break;
             }
+            currentBase += tmp.length;
             var resline = ''
             if (outmode == "cstr") {
                 resline = "\\x" + tmp.replace(/ /g, "\\x");
@@ -263,17 +282,17 @@ class AssemblerApp extends Component {
         return res;
     }
 
-    handleChange(mode, text) {
+    handleChange(mode, text, baseAddress) {
         if (text == null)
             return;
-        this.setState({ mode: mode, text: text });
-        var result = this.computeOutput(mode, text, this.state.outmode);
+        this.setState({ mode: mode, text: text, baseAddress: baseAddress });
+        var result = this.computeOutput(mode, text, this.state.outmode, baseAddress);
         this.setState({ output: result });
     }
 
     handleOutputChange(mode) {
         this.setState({ outmode: mode });
-        var result = this.computeOutput(this.state.mode, this.state.text, mode);
+        var result = this.computeOutput(this.state.mode, this.state.text, mode, this.state.baseAddress);
         this.setState({ output: result });
     }
 
